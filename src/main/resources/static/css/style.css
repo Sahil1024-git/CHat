@@ -216,6 +216,47 @@ body {
     min-height: 18px;
 }
 
+.auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.5rem 0;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e2e8f0;
+}
+.auth-divider:not(:empty)::before {
+    margin-right: .5em;
+}
+.auth-divider:not(:empty)::after {
+    margin-left: .5em;
+}
+.btn-google {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.btn-google:hover {
+    background-color: #f8fafc !important;
+    border-color: #94a3b8 !important;
+}
+.google-logo {
+    width: 18px;
+    height: 18px;
+}
+
+
 
 /* Main Application Layout */
 .app-container {

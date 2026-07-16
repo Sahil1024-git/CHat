@@ -16,6 +16,8 @@ const registerForm = document.getElementById('register-form');
 const tabLogin = document.getElementById('tab-login');
 const tabRegister = document.getElementById('tab-register');
 const authError = document.getElementById('auth-error');
+const btnGoogle = document.getElementById('btn-google');
+
 
 const userSearch = document.getElementById('user-search');
 const usersList = document.getElementById('users-list');
@@ -118,6 +120,22 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
     checkSession();
     
+    // Check if there is an error in URL from OAuth redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const oauthError = urlParams.get('error');
+    if (oauthError) {
+        if (oauthError === 'oauth_token_failed') {
+            showAuthError('Failed to exchange Google code for token.');
+        } else if (oauthError === 'oauth_user_failed') {
+            showAuthError('Failed to retrieve user profile from Google.');
+        } else {
+            const msg = urlParams.get('message');
+            showAuthError(`Google login error: ${msg || oauthError}`);
+        }
+        // Clean the URL query parameters
+        window.history.replaceState({}, document.title, "/");
+    }
+    
     // Auth Tab switching
     tabLogin.addEventListener('click', () => {
         tabLogin.classList.add('active');
@@ -139,6 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loginForm.addEventListener('submit', handleLogin);
     registerForm.addEventListener('submit', handleRegister);
     logoutBtn.addEventListener('click', handleLogout);
+    if (btnGoogle) {
+        btnGoogle.addEventListener('click', handleGoogleLogin);
+    }
+
 
     // Messaging UI
     chatInput.addEventListener('keypress', handleTypingInput);
@@ -190,7 +212,34 @@ async function checkSession() {
     }
 }
 
+async function handleGoogleLogin() {
+    try {
+        const response = await fetch('/api/auth/oauth2/config');
+        if (!response.ok) {
+            throw new Error('Failed to fetch OAuth2 config');
+        }
+        const config = await response.json();
+        if (!config.clientId || !config.redirectUri) {
+            throw new Error('OAuth2 client ID or redirect URI is missing');
+        }
+        
+        // Build the Google OAuth2 Auth URL
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
+            `client_id=${encodeURIComponent(config.clientId)}&` + 
+            `redirect_uri=${encodeURIComponent(config.redirectUri)}&` + 
+            `response_type=code&` + 
+            `scope=${encodeURIComponent('openid email profile')}`;
+            
+        // Redirect browser to Google Sign-In
+        window.location.href = authUrl;
+    } catch (error) {
+        console.error('Google login error:', error);
+        authError.textContent = 'Google sign-in is not configured yet or failed to load.';
+    }
+}
+
 async function handleLogin(e) {
+
     e.preventDefault();
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;

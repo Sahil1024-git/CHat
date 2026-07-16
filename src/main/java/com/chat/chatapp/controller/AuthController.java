@@ -17,6 +17,9 @@ public class AuthController {
 
     private final UserRepository userRepository;
 
+    @org.springframework.beans.factory.annotation.Value("${google.client.id}")
+    private String googleClientId;
+
     // A list of fun departments and roles to mock the design in the user screenshot
     private static final List<String> DEPARTMENTS = Arrays.asList(
         "Technical Department", "UI/UX Design Team", "Marketing & Growth", 
@@ -30,6 +33,30 @@ public class AuthController {
     public AuthController(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
+
+    @GetMapping("/oauth2/config")
+    public ResponseEntity<?> getOAuth2Config(jakarta.servlet.http.HttpServletRequest request) {
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+        
+        String forwardedProto = request.getHeader("X-Forwarded-Proto");
+        if (forwardedProto != null) {
+            scheme = forwardedProto;
+        }
+        
+        String redirectUri = scheme + "://" + serverName;
+        if (serverPort != 80 && serverPort != 443 && forwardedProto == null) {
+            redirectUri += ":" + serverPort;
+        }
+        redirectUri += "/login/oauth2/code/google";
+
+        Map<String, String> config = new HashMap<>();
+        config.put("clientId", googleClientId);
+        config.put("redirectUri", redirectUri);
+        return ResponseEntity.ok(config);
+    }
+
 
     // Helper to generate a stable mock role/department based on username hash
     private Map<String, String> getMockProfile(String username) {
