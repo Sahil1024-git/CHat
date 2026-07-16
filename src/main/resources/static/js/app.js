@@ -193,10 +193,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Messaging UI
     chatInput.addEventListener('keypress', handleTypingInput);
-    chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
-    sendBtn.addEventListener('click', sendMessage);
+    const chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            sendMessage();
+        });
+    }
+
 
     // Search Box
     userSearch.addEventListener('input', renderUserList);
