@@ -54,6 +54,16 @@ const rightPanelRole = document.getElementById('right-panel-role');
 const rightPanelAvailability = document.getElementById('right-panel-availability');
 const rightPanelAddress = document.getElementById('right-panel-address');
 const rightPanelEmail = document.getElementById('right-panel-email');
+const rightPanelAge = document.getElementById('right-panel-age');
+const rightPanelDob = document.getElementById('right-panel-dob');
+
+const myProfileClickable = document.getElementById('my-profile-clickable');
+const profileModal = document.getElementById('profile-modal');
+const profileModalTitle = document.getElementById('profile-modal-title');
+const closeProfileModal = document.getElementById('close-profile-modal');
+const profileEditForm = document.getElementById('profile-edit-form');
+const btnSkipOnboarding = document.getElementById('btn-skip-onboarding');
+
 
 // UI Colors for Avatars
 const AVATAR_COLORS = [
@@ -161,6 +171,21 @@ document.addEventListener('DOMContentLoaded', () => {
         btnGoogle.addEventListener('click', handleGoogleLogin);
     }
 
+    // Profile Modal Events
+    if (myProfileClickable) {
+        myProfileClickable.addEventListener('click', () => openProfileModal(false));
+    }
+    if (closeProfileModal) {
+        closeProfileModal.addEventListener('click', closeProfileModalDialog);
+    }
+    if (btnSkipOnboarding) {
+        btnSkipOnboarding.addEventListener('click', closeProfileModalDialog);
+    }
+    if (profileEditForm) {
+        profileEditForm.addEventListener('submit', handleProfileEditSubmit);
+    }
+
+
 
     // Messaging UI
     chatInput.addEventListener('keypress', handleTypingInput);
@@ -267,13 +292,18 @@ async function handleRegister(e) {
     e.preventDefault();
     const username = document.getElementById('register-username').value;
     const password = document.getElementById('register-password').value;
+    const fullName = document.getElementById('register-fullname').value;
+    const age = document.getElementById('register-age').value;
+    const dob = document.getElementById('register-dob').value;
+    const department = document.getElementById('register-department').value;
+    const role = document.getElementById('register-role').value;
     authError.textContent = '';
 
     try {
         const res = await fetch('/api/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, password, fullName, age, dob, department, role })
         });
         
         const data = await res.json();
@@ -281,6 +311,12 @@ async function handleRegister(e) {
             authError.textContent = 'Registration successful! Please Sign In.';
             tabLogin.click();
             document.getElementById('login-username').value = username;
+            
+            // Clear inputs
+            document.getElementById('register-fullname').value = '';
+            document.getElementById('register-age').value = '';
+            document.getElementById('register-dob').value = '';
+            document.getElementById('register-role').value = '';
         } else {
             authError.textContent = data.error || 'Registration failed';
         }
@@ -289,7 +325,71 @@ async function handleRegister(e) {
     }
 }
 
+
+function openProfileModal(isOnboarding = false) {
+    if (isOnboarding) {
+        profileModalTitle.textContent = 'Setup Your Profile';
+        btnSkipOnboarding.style.display = 'block';
+        closeProfileModal.style.display = 'none';
+    } else {
+        profileModalTitle.textContent = 'Edit Your Profile';
+        btnSkipOnboarding.style.display = 'none';
+        closeProfileModal.style.display = 'block';
+    }
+
+    // Populate inputs
+    document.getElementById('profile-fullname').value = currentUser.fullName || '';
+    document.getElementById('profile-age').value = currentUser.age || '';
+    document.getElementById('profile-dob').value = currentUser.dob || '';
+    document.getElementById('profile-department').value = currentUser.department || 'Technical Department';
+    document.getElementById('profile-role').value = currentUser.role || '';
+
+    profileModal.classList.add('active');
+}
+
+function closeProfileModalDialog() {
+    profileModal.classList.remove('active');
+}
+
+async function handleProfileEditSubmit(e) {
+    e.preventDefault();
+    const fullName = document.getElementById('profile-fullname').value;
+    const age = document.getElementById('profile-age').value;
+    const dob = document.getElementById('profile-dob').value;
+    const department = document.getElementById('profile-department').value;
+    const role = document.getElementById('profile-role').value;
+
+    try {
+        const res = await fetch('/api/auth/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fullName, age, dob, department, role })
+        });
+
+        if (res.ok) {
+            const updatedUser = await res.json();
+            currentUser = updatedUser;
+
+            // Refresh UI
+            myUsername.textContent = currentUser.fullName || currentUser.username;
+            myRole.textContent = currentUser.role;
+            styleAvatar(myAvatar, currentUser.fullName || currentUser.username);
+
+            closeProfileModalDialog();
+            
+            // Reload user list so others see our updated profile
+            loadUsersList();
+        } else {
+            alert('Failed to update profile. Please try again.');
+        }
+    } catch (err) {
+        console.error('Error updating profile:', err);
+        alert('Server connection error. Try again later.');
+    }
+}
+
 async function handleLogout() {
+
     try {
         await fetch('/api/auth/logout', { method: 'POST' });
         if (ws) ws.close();
@@ -312,15 +412,21 @@ function onLoginSuccess(user) {
     appContainer.classList.remove('hidden');
     
     // Update footer profile info
-    myUsername.textContent = user.username;
+    myUsername.textContent = user.fullName || user.username;
     myRole.textContent = user.role;
-    styleAvatar(myAvatar, user.username);
+    styleAvatar(myAvatar, user.fullName || user.username);
     
     // Connect WebSockets and Load users
     connectWebSocket();
     loadUsersList();
     selectChat('global');
+
+    // Onboarding Check: if dob or age is missing (e.g. first Google Sign-In), trigger profile setup
+    if (!user.dob || !user.age) {
+        openProfileModal(true); // Open in onboarding mode
+    }
 }
+
 
 // --- USERS LIST LOADING & RENDERING ---
 async function loadUsersList() {
@@ -340,12 +446,16 @@ function renderUserList() {
     usersList.innerHTML = '';
     
     // Filter users
-    const filtered = registeredUsers.filter(u => u.username.toLowerCase().includes(query));
+    const filtered = registeredUsers.filter(u => {
+        const displayName = u.fullName || u.username;
+        return displayName.toLowerCase().includes(query);
+    });
     userCountBadge.textContent = filtered.length;
 
     filtered.forEach(user => {
         const isOnline = onlineUsers.has(user.username);
         const isActive = activeChat === user.username;
+        const displayName = user.fullName || user.username;
         
         const item = document.createElement('div');
         item.className = `conversation-item ${isActive ? 'active' : ''}`;
@@ -359,7 +469,7 @@ function renderUserList() {
             </div>
             <div class="item-details">
                 <div class="item-top-row">
-                    <span class="user-name">${user.username}</span>
+                    <span class="user-name">${displayName}</span>
                     <span class="item-time" id="time-${user.username}"></span>
                 </div>
                 <div class="item-bottom-row">
@@ -370,8 +480,9 @@ function renderUserList() {
         `;
         
         usersList.appendChild(item);
-        styleAvatar(item.querySelector('.avatar'), user.username);
+        styleAvatar(item.querySelector('.avatar'), displayName);
     });
+
 }
 
 // --- WEBSOCKET real-time COMMUNICATION ---
@@ -561,19 +672,25 @@ function updateActiveChatDetails(partner) {
         rightPanelEmail.textContent = 'lobby@chatapp.com';
     } else {
         const user = registeredUsers.find(u => u.username === partner) || { username: partner, role: 'Team Member', department: 'Staff' };
-        activeChatName.textContent = user.username;
+        const displayName = user.fullName || user.username;
+        activeChatName.textContent = displayName;
         activeChatRole.textContent = user.role;
-        styleAvatar(activeChatAvatar, user.username);
+        styleAvatar(activeChatAvatar, displayName);
         
         // Right Sidebar elements
-        rightPanelName.textContent = user.username;
+        rightPanelName.textContent = displayName;
         rightPanelRole.textContent = `${user.role} (${user.department})`;
-        styleAvatar(rightPanelAvatar, user.username);
+        styleAvatar(rightPanelAvatar, displayName);
+        
+        // Real profile details
+        rightPanelAge.textContent = user.age || '-';
+        rightPanelDob.textContent = user.dob || '-';
         
         // Dynamic Address/Email based on Username hash
         const mock = getMockDetails(user.username);
         rightPanelAddress.textContent = mock.address;
         rightPanelEmail.textContent = mock.email;
+
         
         updateActiveChatStatus();
     }

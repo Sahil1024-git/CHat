@@ -58,23 +58,46 @@ public class AuthController {
     }
 
 
-    // Helper to generate a stable mock role/department based on username hash
-    private Map<String, String> getMockProfile(String username) {
+    private String getMockDepartment(String username) {
         int hash = Math.abs(username.hashCode());
-        String dept = DEPARTMENTS.get(hash % DEPARTMENTS.size());
-        String role = ROLES.get(hash % ROLES.size());
-        
-        Map<String, String> profile = new HashMap<>();
-        profile.put("username", username);
-        profile.put("department", dept);
-        profile.put("role", role);
+        return DEPARTMENTS.get(hash % DEPARTMENTS.size());
+    }
+
+    private String getMockRole(String username) {
+        int hash = Math.abs(username.hashCode());
+        return ROLES.get(hash % ROLES.size());
+    }
+
+    private Map<String, Object> getUserProfileMap(User user) {
+        Map<String, Object> profile = new HashMap<>();
+        profile.put("username", user.getUsername());
+        profile.put("fullName", user.getFullName() != null && !user.getFullName().trim().isEmpty() ? user.getFullName() : user.getUsername());
+        profile.put("age", user.getAge());
+        profile.put("dob", user.getDob());
+        profile.put("department", user.getDepartment() != null && !user.getDepartment().trim().isEmpty() ? user.getDepartment() : getMockDepartment(user.getUsername()));
+        profile.put("role", user.getRole() != null && !user.getRole().trim().isEmpty() ? user.getRole() : getMockRole(user.getUsername()));
         return profile;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-        String password = request.get("password");
+    public ResponseEntity<?> register(@RequestBody Map<String, Object> request) {
+        String username = (String) request.get("username");
+        String password = (String) request.get("password");
+        String fullName = (String) request.get("fullName");
+        Integer age = null;
+        if (request.containsKey("age")) {
+            Object ageVal = request.get("age");
+            if (ageVal instanceof Number) {
+                age = ((Number) ageVal).intValue();
+            } else if (ageVal instanceof String && !((String) ageVal).isEmpty()) {
+                try {
+                    age = Integer.parseInt((String) ageVal);
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        String dob = (String) request.get("dob");
+        String department = (String) request.get("department");
+        String role = (String) request.get("role");
 
         if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Username and password cannot be empty"));
@@ -86,7 +109,7 @@ public class AuthController {
         }
 
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-        User user = new User(username, hashedPassword);
+        User user = new User(username, hashedPassword, fullName, age, dob, department, role);
         userRepository.save(user);
 
         return ResponseEntity.ok(Map.of("message", "User registered successfully"));
@@ -126,8 +149,12 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
         }
         
-        Map<String, String> profile = getMockProfile(username);
-        return ResponseEntity.ok(profile);
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "User not found"));
+        }
+        
+        return ResponseEntity.ok(getUserProfileMap(userOpt.get()));
     }
 
     @GetMapping("/users")
@@ -138,12 +165,44 @@ public class AuthController {
         }
 
         // Return all registered users except current logged in user
-        List<Map<String, String>> userProfiles = userRepository.findAll().stream()
-                .map(User::getUsername)
-                .filter(name -> !name.equalsIgnoreCase(currentUser))
-                .map(this::getMockProfile)
+        List<Map<String, Object>> userProfiles = userRepository.findAll().stream()
+                .filter(user -> !user.getUsername().equalsIgnoreCase(currentUser))
+                .map(this::getUserProfileMap)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(userProfiles);
     }
+
+    @PostMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody Map<String, Object> request, HttpSession session) {
+        String username = (String) session.getAttribute("user");
+        if (username == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        }
+
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
+        }
+
+        User user = userOpt.get();
+        if (request.containsKey("fullName")) user.setFullName((String) request.get("fullName"));
+        if (request.containsKey("age")) {
+            Object ageVal = request.get("age");
+            if (ageVal instanceof Number) {
+                user.setAge(((Number) ageVal).intValue());
+            } else if (ageVal instanceof String && !((String) ageVal).trim().isEmpty()) {
+                try {
+                    user.setAge(Integer.parseInt((String) ageVal));
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        if (request.containsKey("dob")) user.setDob((String) request.get("dob"));
+        if (request.containsKey("department")) user.setDepartment((String) request.get("department"));
+        if (request.containsKey("role")) user.setRole((String) request.get("role"));
+
+        userRepository.save(user);
+        return ResponseEntity.ok(getUserProfileMap(user));
+    }
 }
+

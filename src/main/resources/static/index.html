@@ -69,7 +69,49 @@
                         <input type="password" id="register-password" placeholder="Create password" required>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-success btn-block">Register</button>
+                <div class="form-group">
+                    <label for="register-fullname">Full Name</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="smile" class="input-icon"></i>
+                        <input type="text" id="register-fullname" placeholder="Enter your full name" required>
+                    </div>
+                </div>
+                <div class="form-row-custom">
+                    <div class="form-group">
+                        <label for="register-age">Age</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="register-age" min="1" max="120" placeholder="Age" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-dob">Date of Birth</label>
+                        <div class="input-wrapper">
+                            <input type="date" id="register-dob" required style="padding-left: 12px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row-custom">
+                    <div class="form-group">
+                        <label for="register-department">Department</label>
+                        <div class="input-wrapper">
+                            <select id="register-department" required class="select-input">
+                                <option value="Technical Department">Technical Department</option>
+                                <option value="UI/UX Design Team">UI/UX Design Team</option>
+                                <option value="Marketing & Growth">Marketing & Growth</option>
+                                <option value="Customer Success">Customer Success</option>
+                                <option value="Product Management">Product Management</option>
+                                <option value="QA Engineering">QA Engineering</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-role">Role</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="register-role" placeholder="e.g. Developer" required>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success btn-block" style="margin-top: 12px;">Register</button>
             </form>
 
             <div id="auth-error" class="auth-error-msg"></div>
@@ -119,13 +161,15 @@
 
             <!-- Current User profile info at bottom -->
             <div class="current-user-footer">
-                <div class="avatar-container">
-                    <div id="my-avatar" class="avatar">U</div>
-                    <span class="status-indicator online"></span>
-                </div>
-                <div class="current-user-info">
-                    <span id="my-username" class="my-username">Username</span>
-                    <span id="my-role" class="my-role">Role</span>
+                <div id="my-profile-clickable" class="current-user-profile-clickable" title="Edit Profile">
+                    <div class="avatar-container">
+                        <div id="my-avatar" class="avatar">U</div>
+                        <span class="status-indicator online"></span>
+                    </div>
+                    <div class="current-user-info">
+                        <span id="my-username" class="my-username">Username</span>
+                        <span id="my-role" class="my-role">Role</span>
+                    </div>
                 </div>
                 <button id="logout-btn" class="logout-btn" title="Sign Out">
                     <i data-lucide="log-out"></i>
@@ -267,7 +311,16 @@
                             <span class="info-value" id="right-panel-email">stebin@chatapp.com</span>
                         </div>
                         <div class="info-item">
+                            <span class="info-label">Age</span>
+                            <span class="info-value" id="right-panel-age">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Date of Birth</span>
+                            <span class="info-value" id="right-panel-dob">-</span>
+                        </div>
+                        <div class="info-item">
                             <span class="info-label">Phone</span>
+
                             <span class="info-value">995-250-1803</span>
                         </div>
                         <div class="info-item">
@@ -316,6 +369,53 @@
             </div>
         </aside>
 
+    </div>
+
+    <!-- Profile Edit / Onboarding Modal -->
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="profile-modal-title">Edit Your Profile</h3>
+                <button id="close-profile-modal" class="modal-close-btn">&times;</button>
+            </div>
+            <form id="profile-edit-form">
+                <div class="form-group-modal">
+                    <label for="profile-fullname">Full Name</label>
+                    <input type="text" id="profile-fullname" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-row-custom">
+                    <div class="form-group-modal">
+                        <label for="profile-age">Age</label>
+                        <input type="number" id="profile-age" min="1" max="120" placeholder="Age" required>
+                    </div>
+                    <div class="form-group-modal">
+                        <label for="profile-dob">Date of Birth</label>
+                        <input type="date" id="profile-dob" required>
+                    </div>
+                </div>
+                <div class="form-row-custom">
+                    <div class="form-group-modal">
+                        <label for="profile-department">Department</label>
+                        <select id="profile-department" required class="select-input">
+                            <option value="Technical Department">Technical Department</option>
+                            <option value="UI/UX Design Team">UI/UX Design Team</option>
+                            <option value="Marketing & Growth">Marketing & Growth</option>
+                            <option value="Customer Success">Customer Success</option>
+                            <option value="Product Management">Product Management</option>
+                            <option value="QA Engineering">QA Engineering</option>
+                        </select>
+                    </div>
+                    <div class="form-group-modal">
+                        <label for="profile-role">Role</label>
+                        <input type="text" id="profile-role" placeholder="e.g. Developer" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="btn-skip-onboarding" class="btn btn-skip" style="display:none;">Skip for Now</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Script imports -->
