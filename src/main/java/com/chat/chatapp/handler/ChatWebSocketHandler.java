@@ -82,9 +82,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
                 String responseJson = objectMapper.writeValueAsString(response);
                 sendToUser(recipient, responseJson);
-                if (!recipient.equalsIgnoreCase(sender)) {
+                if (!recipient.equalsIgnoreCase(sender) && !"global".equalsIgnoreCase(recipient)) {
                     sendToUser(sender, responseJson);
                 }
+
 
             } else if ("TYPING".equalsIgnoreCase(type)) {
                 String recipient = (String) payload.get("recipient");
