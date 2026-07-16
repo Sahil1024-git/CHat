@@ -42,20 +42,24 @@ const typingUserName = document.getElementById('typing-user-name');
 
 const sidebarLeft = document.querySelector('.sidebar-left');
 const toggleSidebarBtn = document.getElementById('toggle-sidebar');
-const sidebarRight = document.getElementById('sidebar-right');
-const toggleRightPanelBtn = document.getElementById('toggle-right-panel');
-const closeRightPanelBtn = document.getElementById('close-right-panel');
 
-// Right Sidebar Details
-const rightPanelAvatar = document.getElementById('right-panel-avatar');
-const rightPanelStatus = document.getElementById('right-panel-status');
-const rightPanelName = document.getElementById('right-panel-name');
-const rightPanelRole = document.getElementById('right-panel-role');
-const rightPanelAvailability = document.getElementById('right-panel-availability');
-const rightPanelAddress = document.getElementById('right-panel-address');
-const rightPanelEmail = document.getElementById('right-panel-email');
-const rightPanelAge = document.getElementById('right-panel-age');
-const rightPanelDob = document.getElementById('right-panel-dob');
+
+// Chat Header Buttons
+const headerProfileBtn = document.getElementById('header-profile-btn');
+const headerCallBtn = document.getElementById('header-call-btn');
+
+// Contact details popup modal
+const contactProfileModal = document.getElementById('contact-profile-modal');
+const closeContactProfileModal = document.getElementById('close-contact-profile-modal');
+const contactModalAvatar = document.getElementById('contact-modal-avatar');
+const contactModalStatusDot = document.getElementById('contact-modal-status-dot');
+const contactModalName = document.getElementById('contact-modal-name');
+const contactModalRole = document.getElementById('contact-modal-role');
+const contactModalStatusBadge = document.getElementById('contact-modal-status-badge');
+const contactModalAddress = document.getElementById('contact-modal-address');
+const contactModalEmail = document.getElementById('contact-modal-email');
+const contactModalAge = document.getElementById('contact-modal-age');
+const contactModalDob = document.getElementById('contact-modal-dob');
 
 const myProfileClickable = document.getElementById('my-profile-clickable');
 const profileModal = document.getElementById('profile-modal');
@@ -202,25 +206,37 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarLeft.classList.toggle('open');
     });
 
-    toggleRightPanelBtn.addEventListener('click', () => {
-        sidebarRight.classList.toggle('collapsed');
-    });
+    if (headerProfileBtn) {
+        headerProfileBtn.addEventListener('click', () => {
+            if (activeChat && activeChat !== 'global') {
+                const user = registeredUsers.find(u => u.username === activeChat);
+                if (user) {
+                    openContactProfileModal(user);
+                }
+            }
+        });
+    }
 
-    closeRightPanelBtn.addEventListener('click', () => {
-        sidebarRight.classList.add('collapsed');
-    });
+    if (closeContactProfileModal) {
+        closeContactProfileModal.addEventListener('click', () => {
+            contactProfileModal.classList.remove('active');
+        });
+    }
 
-    // Setup Accordion (Details Sidebar)
-    const accordionHeader = document.querySelector('.accordion-header');
-    const accordionContent = document.querySelector('.accordion-content');
-    const chevron = accordionHeader.querySelector('.chevron');
-    
-    accordionHeader.addEventListener('click', () => {
-        const isCollapsed = accordionContent.style.display === 'none';
-        accordionContent.style.display = isCollapsed ? 'flex' : 'none';
-        chevron.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(-90deg)';
+    // Setup Accordions dynamically
+    document.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const content = header.nextElementSibling;
+            const chevron = header.querySelector('.chevron');
+            const isCollapsed = content.style.display === 'none' || content.style.display === '';
+            content.style.display = isCollapsed ? 'flex' : 'none';
+            if (chevron) {
+                chevron.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(-90deg)';
+            }
+        });
     });
 });
+
 
 // --- AUTHENTICATION FLOWS ---
 async function checkSession() {
@@ -388,7 +404,44 @@ async function handleProfileEditSubmit(e) {
     }
 }
 
+function openContactProfileModal(user) {
+    const displayName = user.fullName || user.username;
+    styleAvatar(contactModalAvatar, displayName);
+    contactModalName.textContent = displayName;
+    contactModalRole.textContent = `${user.role} (${user.department})`;
+    
+    // Status setup
+    const isOnline = onlineUsers.has(user.username);
+    if (isOnline) {
+        contactModalStatusDot.className = 'status-indicator-large online';
+        contactModalStatusBadge.textContent = 'Online';
+        contactModalStatusBadge.className = 'badge-status-pill online';
+    } else {
+        contactModalStatusDot.className = 'status-indicator-large offline';
+        contactModalStatusBadge.textContent = 'Offline';
+        contactModalStatusBadge.className = 'badge-status-pill';
+    }
+    
+    // Information
+    const mock = getMockDetails(user.username);
+    contactModalAddress.textContent = mock.address;
+    contactModalEmail.textContent = user.username;
+    contactModalAge.textContent = user.age || '-';
+    contactModalDob.textContent = user.dob || '-';
+    
+    // Ensure accordion is collapsed initially
+    const content = contactProfileModal.querySelector('.accordion-content');
+    if (content) {
+        content.style.display = 'none';
+        const chevron = contactProfileModal.querySelector('.chevron');
+        if (chevron) chevron.style.transform = 'rotate(-90deg)';
+    }
+
+    contactProfileModal.classList.add('active');
+}
+
 async function handleLogout() {
+
 
     try {
         await fetch('/api/auth/logout', { method: 'POST' });
@@ -661,15 +714,8 @@ function updateActiveChatDetails(partner) {
         styleAvatar(activeChatAvatar, 'global');
         activeChatStatus.classList.add('online');
         
-        // Right Sidebar elements
-        rightPanelName.textContent = 'Global Chatroom';
-        rightPanelRole.textContent = 'All Connected Members';
-        styleAvatar(rightPanelAvatar, 'global');
-        rightPanelStatus.classList.add('online');
-        rightPanelAvailability.innerHTML = `<span class="dot" style="background-color: #22c55e"></span> Public Channel`;
-        rightPanelAvailability.className = 'availability-badge';
-        rightPanelAddress.textContent = 'e:\\CHat Workspace';
-        rightPanelEmail.textContent = 'lobby@chatapp.com';
+        if (headerProfileBtn) headerProfileBtn.style.display = 'none';
+        if (headerCallBtn) headerCallBtn.style.display = 'none';
     } else {
         const user = registeredUsers.find(u => u.username === partner) || { username: partner, role: 'Team Member', department: 'Staff' };
         const displayName = user.fullName || user.username;
@@ -677,20 +723,8 @@ function updateActiveChatDetails(partner) {
         activeChatRole.textContent = user.role;
         styleAvatar(activeChatAvatar, displayName);
         
-        // Right Sidebar elements
-        rightPanelName.textContent = displayName;
-        rightPanelRole.textContent = `${user.role} (${user.department})`;
-        styleAvatar(rightPanelAvatar, displayName);
-        
-        // Real profile details
-        rightPanelAge.textContent = user.age || '-';
-        rightPanelDob.textContent = user.dob || '-';
-        
-        // Dynamic Address/Email based on Username hash
-        const mock = getMockDetails(user.username);
-        rightPanelAddress.textContent = mock.address;
-        rightPanelEmail.textContent = mock.email;
-
+        if (headerProfileBtn) headerProfileBtn.style.display = 'inline-block';
+        if (headerCallBtn) headerCallBtn.style.display = 'inline-block';
         
         updateActiveChatStatus();
     }
@@ -699,7 +733,6 @@ function updateActiveChatDetails(partner) {
 function updateActiveChatStatus() {
     if (activeChat === 'global') {
         activeChatStatus.classList.add('online');
-        rightPanelStatus.classList.add('online');
         return;
     }
     
@@ -707,16 +740,24 @@ function updateActiveChatStatus() {
     
     if (isOnline) {
         activeChatStatus.classList.add('online');
-        rightPanelStatus.classList.add('online');
-        rightPanelAvailability.innerHTML = `<span class="dot" style="background-color: #22c55e"></span> Available`;
-        rightPanelAvailability.className = 'availability-badge';
     } else {
         activeChatStatus.classList.remove('online');
-        rightPanelStatus.classList.remove('online');
-        rightPanelAvailability.innerHTML = `<span class="dot" style="background-color: #94a3b8"></span> Offline`;
-        rightPanelAvailability.className = 'availability-badge offline';
+    }
+
+    // Dynamic update for open profile modal if active chat details are active
+    if (contactProfileModal.classList.contains('active') && activeChat !== 'global') {
+        if (isOnline) {
+            contactModalStatusDot.className = 'status-indicator-large online';
+            contactModalStatusBadge.textContent = 'Online';
+            contactModalStatusBadge.className = 'badge-status-pill online';
+        } else {
+            contactModalStatusDot.className = 'status-indicator-large offline';
+            contactModalStatusBadge.textContent = 'Offline';
+            contactModalStatusBadge.className = 'badge-status-pill';
+        }
     }
 }
+
 
 async function loadChatHistory(partner) {
     messagesContainer.innerHTML = '<div style="text-align: center; color: var(--text-secondary); margin-top: 20px;">Loading chat history...</div>';

@@ -9,8 +9,8 @@
     --text-secondary: #6b7280;
     --text-muted: #9ca3af;
     
-    --primary: #0f62fe;
-    --primary-hover: #004ecc;
+    --primary: #ff5a1f;
+    --primary-hover: #e0460f;
     --success: #198754;
     --danger: #dc3545;
     
@@ -18,7 +18,7 @@
     --font-family: 'Inter', sans-serif;
     
     --sidebar-left-width: 320px;
-    --sidebar-right-width: 320px;
+    --sidebar-right-width: 0px;
 }
 
 * {
@@ -1428,4 +1428,186 @@ body {
 .btn-skip:hover {
     background-color: #e2e8f0;
 }
+
+/* Sidebar lists section headers */
+.list-section-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    padding: 16px 20px 8px 20px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Chat Header Pill Button controls */
+.btn-pill-light {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    border: none;
+    border-radius: 9999px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    outline: none;
+}
+
+.btn-pill-light:hover {
+    background-color: #e2e8f0;
+}
+
+.btn-pill-dark {
+    background-color: #0f172a;
+    color: white;
+    border: none;
+    border-radius: 9999px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    outline: none;
+}
+
+.btn-pill-dark:hover {
+    background-color: #1e293b;
+}
+
+/* Status Pill Badge inside Details Modal */
+.badge-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+
+.badge-status-pill::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #94a3b8;
+}
+
+.badge-status-pill.online {
+    background-color: #ecfdf5;
+    color: #15803d;
+    border-color: #d1fae5;
+}
+
+.badge-status-pill.online::before {
+    background-color: #22c55e;
+}
+
+/* Message Input area refactor */
+.chat-input-wrapper {
+    padding: 16px 24px;
+    background-color: var(--bg-panel);
+    border-top: 1px solid var(--border-color);
+}
+
+.chat-form {
+    display: flex;
+    align-items: center;
+    background-color: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 6px 12px;
+    gap: 8px;
+    width: 100%;
+}
+
+.chat-form input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px 8px;
+    font-size: 13px;
+    outline: none;
+    color: var(--text-primary);
+}
+
+.input-action-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s, color 0.2s;
+    outline: none;
+}
+
+.input-action-btn:hover {
+    background-color: #e2e8f0;
+    color: var(--text-primary);
+}
+
+.input-action-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.send-btn {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    flex-shrink: 0;
+    outline: none;
+}
+
+.send-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+.send-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Contact Profile Card centering */
+.contact-profile-card .profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Illustration styling for Start Messaging */
+.no-chat-illustration {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #fff7ed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+}
+
+.no-chat-illustration svg {
+    width: 40px;
+    height: 40px;
+    color: var(--primary);
+}
+
 
