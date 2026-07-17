@@ -103,7 +103,17 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
                 String responseJson = objectMapper.writeValueAsString(response);
                 sendToUser(recipient, responseJson);
+            } else if ("CALL_OFFER".equalsIgnoreCase(type) || "CALL_ANSWER".equalsIgnoreCase(type) || 
+                       "ICE_CANDIDATE".equalsIgnoreCase(type) || "CALL_DECLINE".equalsIgnoreCase(type) || 
+                       "CALL_END".equalsIgnoreCase(type)) {
+                String recipient = (String) payload.get("recipient");
+                if (recipient != null) {
+                    payload.put("sender", sender);
+                    String payloadJson = objectMapper.writeValueAsString(payload);
+                    sendToUser(recipient, payloadJson);
+                }
             }
+
         } catch (Exception e) {
             System.err.println("Error parsing websocket message: " + e.getMessage());
         }

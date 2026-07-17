@@ -1610,4 +1610,50 @@ body {
     color: var(--primary);
 }
 
+/* WebRTC Calling CSS Styles & Animations */
+.call-avatar-pulse {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: rgba(255, 90, 31, 0.2);
+    animation: calling-pulse 1.8s infinite ease-in-out;
+    z-index: 1;
+}
+
+@keyframes calling-pulse {
+    0% {
+        width: 100px;
+        height: 100px;
+        opacity: 1;
+    }
+    100% {
+        width: 170px;
+        height: 170px;
+        opacity: 0;
+    }
+}
+
+.btn-call-accept:hover {
+    transform: scale(1.1);
+    background-color: #059669 !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.btn-call-decline:hover {
+    transform: scale(1.1);
+    background-color: #dc2626 !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+#btn-mute-call.muted {
+    background-color: #fca5a5;
+    border-color: #f87171;
+    color: #b91c1c;
+}
+
+
 
